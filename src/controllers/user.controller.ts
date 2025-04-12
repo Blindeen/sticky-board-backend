@@ -52,6 +52,8 @@ export const login = async (
     return;
   }
 
-  const token = jwt.sign({ id: user.id }, config.jwtSecret, { expiresIn: '24h' });
+  const token = jwt.sign({ id: user.id }, config.jwtSecret, {
+    expiresIn: config.jwtExpirationTime,
+  });
   res.status(200).json({ token });
 };
