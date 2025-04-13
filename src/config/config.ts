@@ -1,10 +1,10 @@
-import dotenv from "dotenv";
+import dotenv from 'dotenv';
 
 dotenv.config();
 
-const config = {
+export const config = {
   port: Number(process.env.PORT) || 3000,
-  nodeEnv: process.env.NODE_ENV || "development",
+  nodeEnv: process.env.NODE_ENV || 'development',
+  jwtSecret: process.env.JWT_SECRET || '',
+  jwtExpirationTime: Number(process.env.JWT_EXPIRATION) || undefined,
 };
-
-export default config;
