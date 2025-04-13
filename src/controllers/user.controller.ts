@@ -1,5 +1,5 @@
 import { Response } from 'express';
-import { PrismaClient, User } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
 
@@ -13,16 +13,10 @@ export const create = async (
   res: Response,
 ) => {
   const requestBody = req.body;
-  try {
-    const hashedPassword = await bcrypt.hash(requestBody.password, 10);
-    await prisma.user.create({
-      data: { ...requestBody, password: hashedPassword },
-    });
-  } catch (error) {
-    console.error('Error creating user:', error);
-    res.status(500).json({ message: 'Internal server error' });
-    return;
-  }
+  const hashedPassword = await bcrypt.hash(requestBody.password, 10);
+  await prisma.user.create({
+    data: { ...requestBody, password: hashedPassword },
+  });
 
   res.status(201).json({ message: 'User created successfully' });
 };
@@ -33,16 +27,9 @@ export const login = async (
 ) => {
   const { email, password } = req.body;
 
-  let user: User | null;
-  try {
-    user = await prisma.user.findUnique({ where: { email } });
-    if (!user) {
-      res.status(401).json({ message: 'Authentication failed' });
-      return;
-    }
-  } catch (error) {
-    console.error('Error looking for user:', error);
-    res.status(500).json({ message: 'Internal server error' });
+  const user = await prisma.user.findUnique({ where: { email } });
+  if (!user) {
+    res.status(401).json({ message: 'Authentication failed' });
     return;
   }
 
