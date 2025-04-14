@@ -1,7 +1,9 @@
-import { Response } from 'express';
+import { NextFunction, Response } from 'express';
 import { PrismaClient } from '@prisma/client';
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
+
+import { UserAlreadyExistError, InvalidCredentialsError } from '../errors/user.error';
 
 import { config } from '../config/config';
 import { TypedRequest } from './types';
@@ -11,12 +13,18 @@ const prisma = new PrismaClient();
 export const create = async (
   req: TypedRequest<{ name: string; email: string; password: string }>,
   res: Response,
+  next: NextFunction,
 ) => {
   const requestBody = req.body;
   const hashedPassword = await bcrypt.hash(requestBody.password, 10);
-  await prisma.user.create({
-    data: { ...requestBody, password: hashedPassword },
-  });
+  try {
+    await prisma.user.create({
+      data: { ...requestBody, password: hashedPassword },
+    });
+  } catch {
+    next(new UserAlreadyExistError());
+    return;
+  }
 
   res.status(201).json({ message: 'User created successfully' });
 };
@@ -24,18 +32,19 @@ export const create = async (
 export const login = async (
   req: TypedRequest<{ email: string; password: string }>,
   res: Response,
+  next: NextFunction,
 ) => {
   const { email, password } = req.body;
 
   const user = await prisma.user.findUnique({ where: { email } });
   if (!user) {
-    res.status(401).json({ message: 'Authentication failed' });
+    next(new InvalidCredentialsError());
     return;
   }
 
   const passwordMatch = await bcrypt.compare(password, user.password);
   if (!passwordMatch) {
-    res.status(401).json({ message: 'Authentication failed' });
+    next(new InvalidCredentialsError());
     return;
   }
 
