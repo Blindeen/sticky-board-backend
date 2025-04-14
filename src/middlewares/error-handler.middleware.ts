@@ -1,4 +1,6 @@
 import { NextFunction, Request, Response } from 'express';
+import { StatusCodes, ReasonPhrases } from 'http-status-codes';
+
 import { AppError } from '../errors/app.error';
 
 export const errorHandler = (err: Error, _: Request, res: Response, _2: NextFunction) => {
@@ -7,5 +9,7 @@ export const errorHandler = (err: Error, _: Request, res: Response, _2: NextFunc
     res.status(err.status).json({ errors: [{ message: err.message }] });
     return;
   }
-  res.status(500).json({ errors: [{ message: 'Internal Server Error' }] });
+  res
+    .status(StatusCodes.INTERNAL_SERVER_ERROR)
+    .json({ errors: [{ message: ReasonPhrases.INTERNAL_SERVER_ERROR }] });
 };
